@@ -4,6 +4,13 @@ import numpy as np
 from PIL import Image
 import io
 
+# תמיכה ב-HEIC (תמונות מאייפון)
+try:
+    from pillow_heif import register_heif_opener
+    register_heif_opener()
+except ImportError:
+    pass  # אם pillow-heif לא מותקן, פשוט נדלג
+
 from skimage.feature import peak_local_max
 from skimage.segmentation import watershed
 from scipy import ndimage as ndi
@@ -19,12 +26,15 @@ st.set_page_config(
 
 # כותרת יפה
 st.title("🧫 Image Segmentation Playground")
-st.markdown("### נסה שיטות סגמנטציה שונות בזמן אמת: Watershed • K-Means • Otsu")
+st.markdown("###try different segmantation Watershed • K-Means • Otsu")
 
 # ====================== Sidebar ======================
 with st.sidebar:
     st.header("📤 העלאת תמונה")
-    uploaded_file = st.file_uploader("העלה תמונה", type=["png", "jpg", "jpeg", "bmp", "tiff"])
+    uploaded_file = st.file_uploader(
+        "העלה תמונה", 
+        type=["png", "jpg", "jpeg", "bmp", "tiff", "webp", "heic", "heif", "gif"]
+    )
 
     st.markdown("---")
     st.markdown("#### ⚙️ Pre-filter (תצוגה מקדימה)")
@@ -97,7 +107,7 @@ def run_watershed_classic(img_color, min_dist, shift_sp, shift_sr, inverted=Fals
 
     result = img_color.copy()
     rng = np.random.default_rng(42)
-    for label in np.unique(labels):  # ✅ תוקן - הוסר סוגר מיותר
+    for label in np.unique(labels):
         if label == 0:
             continue
         color = rng.integers(0, 256, size=3, dtype=np.uint8)
@@ -131,7 +141,7 @@ if uploaded_file is not None:
     # הצגת התמונה המקורית
     col1, col2 = st.columns(2)
     with col1:
-        st.image(image, caption="תמונה מקורית", use_container_width=True)
+        st.image(image, caption="תמונה מקורית", use_column_width=True)
     with col2:
         if st.session_state.uploaded_image is not None:
             filtered = preprocess_for_display(
@@ -192,7 +202,7 @@ if uploaded_file is not None:
 
             st.session_state.final_result = result
             result_rgb = cv2.cvtColor(result, cv2.COLOR_BGR2RGB)
-            st.image(result_rgb, caption=f"תוצאה: {method}", use_container_width=True)
+            st.image(result_rgb, caption=f"תוצאה: {method}", use_column_width=True)
 
             # כפתור הורדה
             _, buf = cv2.imencode(".png", result)
@@ -208,4 +218,4 @@ else:
 
 # פוטר
 st.markdown("---")
-st.caption("נבנה עם ❤️ ב-Streamlit • בהשראת Google Colab שלך")
+st.caption("that was fun/ i can wire here whatever i want")
